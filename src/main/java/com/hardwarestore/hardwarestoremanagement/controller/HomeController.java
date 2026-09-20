@@ -38,6 +38,7 @@ public class HomeController {
                     .filter(p -> p.getCategory() != null && p.getCategory().equalsIgnoreCase(category)).toList();
         }
         model.addAttribute("products", products);
+        model.addAttribute("category", category);
         model.addAttribute("q", q);
         model.addAttribute("categories", productService.allProducts().stream()
                 .map(p -> p.getCategory()).filter(c -> c != null && !c.isBlank()).distinct().sorted().toList());

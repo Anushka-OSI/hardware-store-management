@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head th:replace="~{fragments/layout :: head('Categories')}"></head>
+
+<body class="bg-slate-100 min-h-screen">
+
+    <nav th:replace="~{fragments/layout :: appNav}"></nav>
+
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <main class="max-w-4xl mx-auto px-4 py-8">
+
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800">
+                    Categories
+                </h1>
+
+                <p class="text-slate-500 text-sm">
+                    Master data used to organize products in the catalogue.
+                </p>
+            </div>
+
+            <a th:href="@{/categories/new}"
+                class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-4 py-2 rounded-lg">
+                + Add Category
+            </a>
+        </div>
+
+        <div class="bg-white shadow rounded-xl overflow-hidden">
+
+            <table class="w-full text-sm text-left">
+
+                <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
+                    <tr>
+                        <th class="py-3 px-4">Name</th>
+                        <th class="py-3 px-4">Description</th>
+                        <th class="py-3 px-4 text-right"></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr th:each="c : ${categories}" class="border-b border-slate-100 hover:bg-slate-50">
+
+                        <td class="py-3 px-4 font-semibold text-slate-700" th:text="${c.name}">
+                            Cement
+                        </td>
+
+                        <td class="py-3 px-4 text-slate-500" th:text="${c.description}">
+                            -
+                        </td>
+
+                        <td class="py-3 px-4 text-right space-x-3">
+
+                            <a th:href="@{/categories/{id}/edit(id=${c.id})}"
+                                class="text-amber-600 hover:underline text-xs font-semibold">
+                                Edit
+                            </a>
+
+                            <form th:action="@{/categories/{id}/delete(id=${c.id})}" method="post" class="inline"
+                                th:attr="data-category-name=${c.name}">
+
+                                <button type="submit" class="text-red-500 hover:text-red-700 text-xs font-semibold"
+                                    onclick="return confirmDelete(this)">
+                                    Delete
+                                </button>
+
+                            </form>
+
+                        </td>
+
+                    </tr>
+
+                    <tr th:if="${#lists.isEmpty(categories)}">
+                        <td colspan="3" class="py-10 text-center text-slate-400">
+                            No categories yet. Add your first one.
+                        </td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </main>
+    <script>
+        function confirmDelete(button) {
+            const form = button.closest('form');
+            const categoryName = form.getAttribute('data-category-name');
+
+            return confirm(
+                'Delete category "' +
+                categoryName +
+                '"? Products keep their current text, but this master entry is removed.'
+            );
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Category Form')}"></head>
+<body class="bg-slate-100 min-h-screen">
+<nav th:replace="~{fragments/layout :: appNav}"></nav>
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main class="max-w-xl mx-auto px-4 py-8">
+    <a th:href="@{/categories}" class="text-sm text-slate-500 hover:underline">&larr; Back to categories</a>
+    <h1 class="text-2xl font-bold text-slate-800 mt-2 mb-6"
+        th:text="${categoryForm.id() == null} ? 'Add Category' : 'Edit Category'">Add Category</h1>
+
+    <form th:action="${categoryForm.id() == null} ? @{/categories/save} : @{/categories/update}"
+          method="post" class="bg-white shadow rounded-xl p-6 space-y-5">
+        <input type="hidden" name="id" th:value="${categoryForm.id()}">
+        <div>
+            <label class="block text-sm font-medium text-slate-600 mb-1">Name *</label>
+            <input type="text" name="name" th:value="${categoryForm.name()}" required
+                   placeholder="e.g. Cement, Hand Tools, Plumbing"
+                   class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-slate-600 mb-1">Description</label>
+            <textarea name="description" rows="3" th:text="${categoryForm.description()}"
+                      placeholder="Short note about what this category covers"
+                      class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+        </div>
+        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold py-2.5 rounded-lg transition">
+            Save Category
+        </button>
+    </form>
+</main>
+</body>
+</html>

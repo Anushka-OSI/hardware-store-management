@@ -1,54 +1,645 @@
+
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
+
 <head th:replace="~{fragments/layout :: head('Store Catalogue')}"></head>
-<body class="bg-slate-100 min-h-screen">
-<nav th:replace="~{fragments/layout :: publicNav}"></nav>
 
-<main class="max-w-7xl mx-auto px-4 py-6">
-    <h1 class="text-2xl font-bold text-slate-800 mb-1">Hardware Store Catalogue</h1>
-    <p class="text-slate-500 mb-5">Browse our products, view prices and availability.</p>
+<body class="bg-slate-50 min-h-screen text-slate-800">
 
-    <form method="get" th:action="@{/catalogue}" class="flex gap-2 mb-4 max-w-xl">
-        <input type="text" name="q" th:value="${q}" placeholder="Search by name, brand, category or SKU..."
-               class="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500">
-        <button class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-5 py-2 rounded-lg">Search</button>
-    </form>
+    <!-- ================= NAVIGATION ================= -->
 
-    <div class="flex gap-2 mb-6 flex-wrap">
-        <a th:href="@{/catalogue}" th:classappend="${category == null} ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 hover:bg-slate-200'"
-           class="px-3 py-1.5 rounded-full text-sm border border-slate-200">All</a>
-        <a th:each="c : ${categories}" th:href="@{/catalogue(category=${c})}" th:text="${c}"
-           th:classappend="${category == c} ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 hover:bg-slate-200'"
-           class="px-3 py-1.5 rounded-full text-sm border border-slate-200">Category</a>
-    </div>
+    <nav th:replace="~{fragments/layout :: publicNav}"></nav>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-        <div th:each="p : ${products}" class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200 flex flex-col">
-            <!-- Photo / placeholder -->
-            <div class="h-40 bg-slate-100 flex items-center justify-center">
-                <img th:if="${p.photoPath != null}" th:src="@{/uploads/{name}(name=${p.photoPath})}" alt="product" class="h-full w-full object-contain">
-                <span th:unless="${p.photoPath != null}" class="text-slate-300 text-5xl">&#128717;</span>
-            </div>
-            <div class="p-4 flex-1 flex flex-col">
-                <div class="flex justify-between items-start gap-2">
-                    <h3 class="font-semibold text-slate-800" th:text="${p.name}">Product</h3>
-                    <span th:text="${p.brand}" class="text-xs text-slate-400">Brand</span>
+
+    <!-- ================= MAIN ================= -->
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+
+
+        <!-- ================= HERO ================= -->
+
+        <section
+            class="relative overflow-hidden rounded-2xl
+                   bg-slate-900 text-white
+                   px-6 sm:px-10 py-10 mb-8 shadow-sm"
+        >
+
+            <!-- Decorative background -->
+            <div
+                class="absolute -right-20 -top-20
+                       w-72 h-72 rounded-full
+                       bg-amber-400/10"
+            ></div>
+
+            <div
+                class="absolute -right-10 -bottom-32
+                       w-64 h-64 rounded-full
+                       bg-amber-400/5"
+            ></div>
+
+
+            <div class="relative max-w-2xl">
+
+                <div
+                    class="inline-flex items-center gap-2
+                           bg-amber-400/10 border border-amber-400/20
+                           text-amber-300
+                           px-3 py-1 rounded-full
+                           text-xs font-semibold mb-4"
+                >
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                    Guruge Hardware Store
                 </div>
-                <p class="text-xs text-slate-500 mb-2" th:text="${p.category}">Category</p>
-                <div class="mt-auto">
-                    <div class="text-lg font-bold text-slate-800 mb-2">LKR <span th:text="${#numbers.formatDecimal(p.price, 1, 2)}">0.00</span></div>
-                    <span th:if="${p.available}" class="inline-block bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded">AVAILABLE</span>
-                    <span th:unless="${p.available}" class="inline-block bg-red-100 text-red-600 text-xs font-semibold px-2 py-1 rounded">OUT OF STOCK</span>
-                </div>
+
+
+                <h1
+                    class="text-3xl sm:text-4xl font-bold tracking-tight mb-3"
+                >
+                    Find the right hardware
+                    <span class="text-amber-400">for your project.</span>
+                </h1>
+
+
+                <p class="text-slate-300 text-sm sm:text-base max-w-xl">
+                    Browse our products, compare prices and check
+                    availability before placing your request.
+                </p>
+
             </div>
+
+        </section>
+
+
+
+        <!-- ================= SEARCH ================= -->
+
+        <section class="mb-7">
+
+            <form
+                method="get"
+                th:action="@{/catalogue}"
+                class="flex flex-col sm:flex-row gap-3"
+            >
+
+                <div class="relative flex-1">
+
+                    <!-- Search icon -->
+                    <div
+                        class="absolute inset-y-0 left-0
+                               flex items-center pl-4
+                               text-slate-400 pointer-events-none"
+                    >
+                        &#128269;
+                    </div>
+
+
+                    <input
+                        type="text"
+                        name="q"
+                        th:value="${q}"
+                        placeholder="Search products, brands, categories or SKU..."
+                        class="w-full pl-11 pr-4 py-3
+                               bg-white
+                               border border-slate-200
+                               rounded-xl
+                               shadow-sm
+                               text-sm
+                               placeholder:text-slate-400
+                               focus:outline-none
+                               focus:ring-2 focus:ring-amber-400
+                               focus:border-amber-400
+                               transition"
+                    />
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="bg-amber-500 hover:bg-amber-600
+                           text-slate-900
+                           font-semibold
+                           px-6 py-3
+                           rounded-xl
+                           shadow-sm
+                           transition
+                           whitespace-nowrap"
+                >
+                    Search
+                </button>
+
+            </form>
+
+        </section>
+
+
+
+        <!-- ================= CATEGORY FILTER ================= -->
+
+        <section class="mb-8">
+
+            <div class="flex items-center justify-between mb-3">
+
+                <h2 class="text-sm font-semibold text-slate-700">
+                    Browse Categories
+                </h2>
+
+                <span
+                    th:if="${category != null}"
+                    class="text-xs text-slate-400"
+                >
+                    Filter active
+                </span>
+
+            </div>
+
+
+            <div class="flex gap-2 flex-wrap">
+
+                <!-- All -->
+                <a
+                    th:href="@{/catalogue}"
+                    th:classappend="${category == null}
+                        ? ' bg-slate-900 text-white border-slate-900 shadow-sm'
+                        : ' bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'"
+                    class="px-4 py-2 rounded-full
+                           text-sm font-medium
+                           border transition"
+                >
+                    All Products
+                </a>
+
+
+                <!-- Categories -->
+                <a
+                    th:each="c : ${categories}"
+                    th:href="@{/catalogue(category=${c})}"
+                    th:text="${c}"
+                    th:classappend="${category == c}
+                        ? ' bg-slate-900 text-white border-slate-900 shadow-sm'
+                        : ' bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'"
+                    class="px-4 py-2 rounded-full
+                           text-sm font-medium
+                           border transition"
+                >
+                    Category
+                </a>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ================= RESULTS HEADER ================= -->
+
+        <div class="flex items-center justify-between mb-5">
+
+            <div>
+
+                <h2 class="text-xl font-bold text-slate-900">
+                    Products
+                </h2>
+
+                <p
+                    th:if="${category == null && (q == null || q == '')}"
+                    class="text-sm text-slate-500 mt-1"
+                >
+                    Browse our available hardware products.
+                </p>
+
+                <p
+                    th:if="${category != null}"
+                    class="text-sm text-slate-500 mt-1"
+                >
+                    Showing products in
+                    <span
+                        class="font-semibold text-slate-700"
+                        th:text="${category}"
+                    >
+                        Category
+                    </span>
+                </p>
+
+            </div>
+
         </div>
-    </div>
 
-    <p th:if="${#lists.isEmpty(products)}" class="text-slate-500 text-center py-10">No products match your search.</p>
-</main>
 
-<footer class="max-w-7xl mx-auto px-4 py-8 text-center text-xs text-slate-400">
-    Guruge Hardware Store | Need help? <a th:href="@{/request}" class="text-amber-600 hover:underline">Submit a request</a>
-</footer>
+
+        <!-- ================= PRODUCTS GRID ================= -->
+
+        <div
+            class="grid grid-cols-1
+                   sm:grid-cols-2
+                   md:grid-cols-3
+                   lg:grid-cols-4
+                   gap-5"
+        >
+
+            <!-- Product -->
+            <div
+                th:each="p : ${products}"
+                class="group bg-white
+                       rounded-2xl
+                       border border-slate-200
+                       overflow-hidden
+                       flex flex-col
+                       shadow-sm
+                       hover:shadow-lg
+                       hover:-translate-y-1
+                       transition-all duration-200"
+            >
+
+
+                <!-- ================= PRODUCT IMAGE ================= -->
+
+                <div
+                    class="relative h-48
+                           bg-slate-50
+                           border-b border-slate-100
+                           flex items-center justify-center
+                           overflow-hidden"
+                >
+
+                    <!-- Image -->
+                    <img
+                        th:if="${p.photoPath != null}"
+                        th:src="@{/uploads/{name}(name=${p.photoPath})}"
+                        th:alt="${p.name}"
+                        class="h-full w-full object-contain
+                               p-5
+                               group-hover:scale-105
+                               transition-transform duration-300"
+                    />
+
+
+                    <!-- Placeholder -->
+                    <div
+                        th:unless="${p.photoPath != null}"
+                        class="flex flex-col items-center
+                               justify-center
+                               text-slate-300"
+                    >
+
+                        <div class="text-5xl mb-2">
+                            &#128717;
+                        </div>
+
+                        <span class="text-xs">
+                            No image
+                        </span>
+
+                    </div>
+
+
+                    <!-- Availability Badge -->
+                    <div class="absolute top-3 left-3">
+
+                        <span
+                            th:if="${p.available}"
+                            class="inline-flex items-center gap-1.5
+                                   bg-emerald-50
+                                   border border-emerald-200
+                                   text-emerald-700
+                                   text-[10px]
+                                   font-bold
+                                   uppercase
+                                   tracking-wide
+                                   px-2.5 py-1.5
+                                   rounded-full"
+                        >
+                            <span
+                                class="w-1.5 h-1.5
+                                       rounded-full
+                                       bg-emerald-500"
+                            ></span>
+                            Available
+                        </span>
+
+
+                        <span
+                            th:unless="${p.available}"
+                            class="inline-flex items-center gap-1.5
+                                   bg-red-50
+                                   border border-red-200
+                                   text-red-600
+                                   text-[10px]
+                                   font-bold
+                                   uppercase
+                                   tracking-wide
+                                   px-2.5 py-1.5
+                                   rounded-full"
+                        >
+                            <span
+                                class="w-1.5 h-1.5
+                                       rounded-full
+                                       bg-red-500"
+                            ></span>
+                            Out of Stock
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- ================= PRODUCT DETAILS ================= -->
+
+                <div
+                    class="p-4
+                           flex-1
+                           flex flex-col"
+                >
+
+                    <!-- Brand -->
+                    <div
+                        class="flex items-center
+                               justify-between
+                               gap-2 mb-1"
+                    >
+
+                        <span
+                            th:text="${p.brand}"
+                            class="text-[11px]
+                                   font-semibold
+                                   uppercase
+                                   tracking-wide
+                                   text-amber-600"
+                        >
+                            Brand
+                        </span>
+
+                    </div>
+
+
+                    <!-- Product Name -->
+                    <h3
+                        th:text="${p.name}"
+                        class="font-semibold
+                               text-slate-800
+                               text-base
+                               leading-snug
+                               line-clamp-2"
+                    >
+                        Product
+                    </h3>
+
+
+                    <!-- Category -->
+                    <p
+                        th:text="${p.category}"
+                        class="text-xs
+                               text-slate-400
+                               mt-1"
+                    >
+                        Category
+                    </p>
+
+
+                    <!-- Bottom -->
+                    <div class="mt-auto pt-5">
+
+
+                        <!-- Price -->
+                        <div
+                            class="flex items-end
+                                   justify-between
+                                   gap-2"
+                        >
+
+                            <div>
+
+                                <div
+                                    class="text-[10px]
+                                           uppercase
+                                           tracking-wide
+                                           text-slate-400
+                                           font-medium"
+                                >
+                                    Price
+                                </div>
+
+                                <div
+                                    class="text-xl
+                                           font-bold
+                                           text-slate-900
+                                           mt-0.5"
+                                >
+                                    <span
+                                        class="text-sm
+                                               font-medium
+                                               text-slate-500"
+                                    >
+                                        LKR
+                                    </span>
+
+                                    <span
+                                        th:text="${#numbers.formatDecimal(p.price, 1, 2)}"
+                                    >
+                                        0.00
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- Status indicator -->
+                            <div
+                                th:if="${p.available}"
+                                class="w-9 h-9
+                                       rounded-full
+                                       bg-emerald-50
+                                       text-emerald-600
+                                       flex items-center
+                                       justify-center
+                                       text-sm"
+                                title="Available"
+                            >
+                                ✓
+                            </div>
+
+                            <div
+                                th:unless="${p.available}"
+                                class="w-9 h-9
+                                       rounded-full
+                                       bg-red-50
+                                       text-red-500
+                                       flex items-center
+                                       justify-center
+                                       text-sm"
+                                title="Out of stock"
+                            >
+                                ×
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- ================= EMPTY STATE ================= -->
+
+        <div
+            th:if="${#lists.isEmpty(products)}"
+            class="bg-white
+                   border border-slate-200
+                   rounded-2xl
+                   py-16 px-6
+                   text-center
+                   shadow-sm"
+        >
+
+            <div
+                class="w-16 h-16
+                       mx-auto
+                       rounded-full
+                       bg-slate-100
+                       flex items-center
+                       justify-center
+                       text-3xl
+                       mb-4"
+            >
+                &#128269;
+            </div>
+
+
+            <h3
+                class="font-semibold
+                       text-slate-800
+                       text-lg"
+            >
+                No products found
+            </h3>
+
+
+            <p
+                class="text-sm
+                       text-slate-500
+                       mt-1
+                       max-w-md
+                       mx-auto"
+            >
+                We couldn't find any products matching your search
+                or selected category.
+            </p>
+
+
+            <a
+                th:href="@{/catalogue}"
+                class="inline-flex
+                       mt-5
+                       bg-slate-900
+                       hover:bg-slate-800
+                       text-white
+                       px-5 py-2.5
+                       rounded-lg
+                       text-sm
+                       font-semibold
+                       transition"
+            >
+                View All Products
+            </a>
+
+        </div>
+
+    </main>
+
+
+
+    <!-- ================= FOOTER ================= -->
+
+    <footer
+        class="mt-12
+               border-t border-slate-200
+               bg-white"
+    >
+
+        <div
+            class="max-w-7xl mx-auto
+                   px-4 sm:px-6
+                   py-8"
+        >
+
+            <div
+                class="flex flex-col
+                       sm:flex-row
+                       items-center
+                       justify-between
+                       gap-4"
+            >
+
+                <div class="text-center sm:text-left">
+
+                    <div
+                        class="font-bold
+                               text-slate-800"
+                    >
+                        Guruge Hardware
+                    </div>
+
+                    <div
+                        class="text-xs
+                               text-slate-400
+                               mt-1"
+                    >
+                        Quality hardware for every project.
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="text-xs
+                           text-slate-400
+                           text-center sm:text-right"
+                >
+
+                    <div>
+                        Need help finding something?
+                    </div>
+
+                    <a
+                        th:href="@{/request}"
+                        class="inline-block
+                               mt-1
+                               text-amber-600
+                               hover:text-amber-700
+                               font-semibold
+                               hover:underline"
+                    >
+                        Submit a request →
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <div
+                class="border-t
+                       border-slate-100
+                       mt-6 pt-5
+                       text-center
+                       text-[11px]
+                       text-slate-400"
+            >
+                © Guruge Hardware Store. All rights reserved.
+            </div>
+
+        </div>
+
+    </footer>
+
 </body>
 </html>
+

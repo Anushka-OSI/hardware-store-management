@@ -24,6 +24,7 @@ public class DataSeeder implements CommandLineRunner {
     private final CustomerRequestRepository requestRepository;
     private final PurchaseOrderRepository poRepository;
     private final SaleRepository saleRepository;
+    private final CategoryRepository categoryRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Value("${app.upload-dir}")
@@ -31,12 +32,14 @@ public class DataSeeder implements CommandLineRunner {
 
     public DataSeeder(UserRepository userRepository, ProductRepository productRepository,
                       CustomerRequestRepository requestRepository, PurchaseOrderRepository poRepository,
-                      SaleRepository saleRepository, PasswordEncoder passwordEncoder) {
+                      SaleRepository saleRepository, CategoryRepository categoryRepository,
+                      PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.requestRepository = requestRepository;
         this.poRepository = poRepository;
         this.saleRepository = saleRepository;
+        this.categoryRepository = categoryRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -56,6 +59,14 @@ public class DataSeeder implements CommandLineRunner {
         User cashier = userRepository.findByUsername("cashier").orElse(null);
         User sup1 = userRepository.findByUsername("sup1").orElse(null);
         User sup2 = userRepository.findByUsername("sup2").orElse(null);
+
+        if (categoryRepository.count() == 0) {
+            seedCategories();
+        }
+
+        if (categoryRepository.count() == 0) {
+            seedCategories();
+        }
 
         if (productRepository.count() == 0) {
             seedProducts(sup1, sup2);
@@ -99,6 +110,26 @@ public class DataSeeder implements CommandLineRunner {
         u.setAddress(address);
         u.setActive(active);
         return u;
+    }
+
+    private void seedCategories() {
+        category("Cement", "Cement, concrete and masonry materials");
+        category("Hand Tools", "Hammers, screwdrivers, pliers and manual tools");
+        category("Plumbing", "Pipes, fittings and plumbing supplies");
+        category("Fasteners", "Nails, screws, bolts and anchors");
+        category("Paint", "Paints, emulsions and painting accessories");
+        category("Electrical", "Wires, switches and electrical components");
+        category("Power Tools", "Drills, grinders and power equipment");
+        category("Abrasives", "Sand paper, grinding discs and abrasives");
+        category("Security", "Padlocks, locks and security hardware");
+        category("Flooring", "Tiles and flooring materials");
+    }
+
+    private void category(String name, String description) {
+        Category c = new Category();
+        c.setName(name);
+        c.setDescription(description);
+        categoryRepository.save(c);
     }
 
     private void seedProducts(User sup1, User sup2) {
