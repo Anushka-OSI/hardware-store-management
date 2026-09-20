@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Purchase Order')}"></head>
+<body class="bg-slate-100 min-h-screen">
+<nav th:replace="~{fragments/layout :: appNav}"></nav>
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main class="max-w-5xl mx-auto px-4 py-6">
+    <div class="flex justify-between items-start mb-6">
+        <div>
+            <a th:href="@{/purchase-orders}" class="text-sm text-amber-600 hover:underline">&larr; Back to purchase orders</a>
+            <h1 class="text-2xl font-bold text-slate-800 mt-1 font-mono" th:text="${order.poNumber}">PO-XXXX</h1>
+            <p class="text-slate-500 text-sm">Ordered by: <span th:text="${order.createdBy.fullName}">User</span> on
+                <span th:text="${#temporals.format(order.createdAt, 'yyyy-MM-dd HH:mm')}">date</span></p>
+        </div>
+        <span th:text="${order.status}" th:classappend="${order.status.name() == 'RECEIVED'} ? 'bg-green-100 text-green-800' : (${order.status.name() == 'CANCELLED'} ? 'bg-red-100 text-red-800' : (${order.status.name() == 'PARTIALLY_RECEIVED'} ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'))"
+              class="px-3 py-1 rounded-full text-xs font-bold uppercase">Status</span>
+    </div>
+
+    <!-- Supplier + dates -->
+    <div class="grid sm:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white shadow rounded-xl p-4">
+            <div class="text-xs text-slate-500 uppercase">Supplier</div>
+            <div class="font-semibold text-slate-800" th:text="${order.supplier.businessName != null ? order.supplier.businessName : order.supplier.fullName}">Supplier</div>
+            <div class="text-sm text-slate-500" th:text="${order.supplier.contactPerson != null ? order.supplier.contactPerson : ''}">Contact</div>
+        </div>
+        <div class="bg-white shadow rounded-xl p-4">
+            <div class="text-xs text-slate-500 uppercase">Order Date</div>
+            <div class="font-semibold text-slate-800" th:text="${#temporals.format(order.orderDate, 'yyyy-MM-dd')}">date</div>
+        </div>
+        <div class="bg-white shadow rounded-xl p-4">
+            <div class="text-xs text-slate-500 uppercase">Expected Delivery</div>
+            <div class="font-semibold text-slate-800" th:text="${order.expectedDeliveryDate != null ? #temporals.format(order.expectedDeliveryDate, 'yyyy-MM-dd') : 'N/A'}">date</div>
+        </div>
+    </div>
+
+    <!-- Items + delivery -->
+    <form id="deliveryForm" th:action="@{/purchase-orders/{id}/record-delivery(id=${order.id})}" method="post">
+    <div class="bg-white shadow rounded-xl overflow-hidden mb-6">
+        <div class="px-5 py-4 border-b flex justify-between items-center">
+            <h2 class="font-semibold text-slate-700">Order Items &amp; Delivery</h2>
+            <span class="text-sm text-slate-500">Total: LKR <span th:text="${#numbers.formatDecimal(order.totalCost, 1, 2)}">0.00</span></span>
+        </div>
+        <table class="min-w-full text-sm">
+            <thead>
+            <tr class="text-left text-slate-500 border-b bg-slate-50">
+                <th class="py-3 px-4">Product</th>
+                <th class="py-3 px-4 w-20">Ordered</th>
+                <th class="py-3 px-4 w-24">Unit Cost</th>
+                <th class="py-3 px-4 w-28">Received *</th>
+                <th class="py-3 px-4">Damage / Return Notes</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="item : ${order.items}" class="border-b border-slate-100 align-middle">
+                <input type="hidden" name="itemIds" th:value="${item.id}">
+                <td class="py-3 px-4">
+                    <div class="font-medium text-slate-800" th:text="${item.product.name}">Product</div>
+                    <div class="text-xs text-slate-400" th:text="${item.product.sku}">SKU</div>
+                </td>
+                <td class="py-3 px-4 font-semibold" th:text="${item.quantityOrdered}">0</td>
+                <td class="py-3 px-4">LKR <span th:text="${#numbers.formatDecimal(item.unitCost, 1, 2)}">0.00</span></td>
+                <td class="py-3 px-4">
+                    <input type="number" name="receivedQty" min="0" th:value="${item.quantityReceived}"
+                           th:max="${item.quantityOrdered}"
+                           th:disabled="${order.status.name() == 'CANCELLED' || order.status.name() == 'RECEIVED'}"
+                           class="w-24 px-3 py-2 border border-slate-300 rounded-lg text-center">
+                    <span class="text-xs text-slate-400" th:text="'/ ' + ${item.quantityOrdered}">/ ordered</span>
+                </td>
+                <td class="py-3 px-4">
+                    <input type="text" name="notes" th:value="${item.notes}"
+                           th:disabled="${order.status.name() == 'CANCELLED' || order.status.name() == 'RECEIVED'}"
+                           class="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="e.g. damaged box, wrong brand">
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    </form>
+    <div th:if="${order.status.name() != 'CANCELLED' && order.status.name() != 'RECEIVED'}" class="px-5 py-4 flex flex-wrap gap-3">
+        <button type="submit" form="deliveryForm" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg text-sm">
+            Save Recorded Deliveries
+        </button>
+        <form th:if="${currentRole != 'SUPPLIER'}" th:action="@{/purchase-orders/{id}/confirm(id=${order.id})}" method="post"
+              onsubmit="return confirm('Confirm received deliveries? Received stock will be added to inventory.');">
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2 rounded-lg text-sm">
+                Confirm &amp; Add to Stock
+            </button>
+        </form>
+    </div>
+    <div th:if="${order.status.name() == 'RECEIVED'}" class="px-5 py-4 bg-green-50 text-green-800 text-sm font-semibold">
+        &#10004; This delivery has been confirmed and stock has been added to inventory.
+    </div>
+    <div th:if="${order.status.name() == 'CANCELLED'}" class="px-5 py-4 bg-red-50 text-red-700 text-sm font-semibold">
+        &#10008; This purchase order has been cancelled.
+    </div>
+
+    <!-- Order notes -->
+    <div th:if="${order.notes != null && !order.notes.isBlank()}" class="bg-white shadow rounded-xl p-4 mb-6 text-sm">
+        <span class="font-semibold text-slate-700">Notes: </span>
+        <span class="text-slate-600" th:text="${order.notes}">notes</span>
+    </div>
+
+    <!-- Actions -->
+    <div th:if="${canEdit}" class="flex gap-3">
+        <form th:action="@{/purchase-orders/{id}/cancel(id=${order.id})}" method="post"
+              onsubmit="return confirm('Cancel this purchase order? This cannot be undone.');">
+            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-semibold px-5 py-2 rounded-lg text-sm">Cancel Order</button>
+        </form>
+    </div>
+
+    <div th:if="${order.status.name() == 'PARTIALLY_RECEIVED' || order.status.name() == 'PLACED' || order.status.name() == 'PENDING'}"
+         class="mt-4 text-sm text-slate-500 bg-white shadow rounded-lg p-3">
+        <span th:if="${currentRole != 'SUPPLIER'}">Record delivered quantities above, then press <strong>Confirm &amp; Add to Stock</strong> to add the received stock to inventory. Received quantities are checked against the order, and notes can flag incorrect or damaged deliveries.</span>
+        <span th:if="${currentRole == 'SUPPLIER'}">Enter the delivered quantities for each item above, then press <strong>Save Recorded Deliveries</strong>. The store will verify and confirm the delivery, which then adds stock to inventory.</span>
+    </div>
+</main>
+</body>
+</html>

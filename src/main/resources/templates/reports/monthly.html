@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Monthly Report')}"></head>
+<body class="bg-slate-100 min-h-screen">
+<nav th:replace="~{fragments/layout :: appNav}"></nav>
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main class="max-w-6xl mx-auto px-4 py-6">
+    <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">Monthly Sales Summary</h1>
+            <p class="text-slate-500 text-sm">Summary of sales for a whole month.</p>
+        </div>
+        <form method="get" th:action="@{/reports/monthly}" class="flex gap-2">
+            <input type="month" name="month" th:value="${#temporals.format(selectedMonth, 'yyyy-MM')}"
+                   class="px-3 py-2 border border-slate-300 rounded-lg">
+            <button class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-4 py-2 rounded-lg">Show</button>
+        </form>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        <div class="bg-white shadow rounded-xl p-4 border-l-4 border-amber-500">
+            <div class="text-xs text-slate-500">Transactions</div>
+            <div class="text-xl font-bold" th:text="${transactions}">0</div>
+        </div>
+        <div class="bg-white shadow rounded-xl p-4 border-l-4 border-green-500">
+            <div class="text-xs text-slate-500">Total Sales</div>
+            <div class="text-xl font-bold text-green-700">LKR <span th:text="${#numbers.formatDecimal(total, 1, 2)}">0.00</span></div>
+        </div>
+        <div class="bg-white shadow rounded-xl p-4 border-l-4 border-slate-500">
+            <div class="text-xs text-slate-500">Subtotal</div>
+            <div class="text-xl font-bold">LKR <span th:text="${#numbers.formatDecimal(subtotal, 1, 2)}">0.00</span></div>
+        </div>
+        <div class="bg-white shadow rounded-xl p-4 border-l-4 border-orange-500">
+            <div class="text-xs text-slate-500">Discounts</div>
+            <div class="text-xl font-bold text-orange-700">LKR <span th:text="${#numbers.formatDecimal(discounts, 1, 2)}">0.00</span></div>
+        </div>
+        <div class="bg-white shadow rounded-xl p-4 border-l-4 border-blue-500">
+            <div class="text-xs text-slate-500">Items Sold</div>
+            <div class="text-xl font-bold" th:text="${itemCount}">0</div>
+        </div>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white shadow rounded-xl p-5">
+            <h2 class="font-semibold text-slate-700 mb-4">Sales Per Day</h2>
+            <canvas id="dailyChart" height="220"></canvas>
+        </div>
+        <div class="bg-white shadow rounded-xl p-5">
+            <h2 class="font-semibold text-slate-700 mb-4">Best Selling Products</h2>
+            <table class="w-full text-sm">
+                <thead>
+                <tr class="text-left text-slate-500 border-b">
+                    <th class="py-2">Product</th>
+                    <th class="py-2 text-right">Quantity</th>
+                    <th class="py-2 text-right">Revenue</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="b : ${bestSellers}" class="border-b border-slate-100">
+                    <td class="py-2" th:text="${b.name}">name</td>
+                    <td class="py-2 text-right" th:text="${b.qty}">0</td>
+                    <td class="py-2 text-right" th:text="${'LKR ' + #numbers.formatDecimal(b.revenue, 1, 2)}">0.00</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(bestSellers)}"><td colspan="3" class="py-3 text-slate-400 text-center">No sales.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="bg-white shadow rounded-xl overflow-hidden mb-6">
+        <div class="px-5 py-4 border-b flex justify-between items-center">
+            <span class="font-semibold text-slate-700">All Transactions</span>
+            <span class="text-sm text-slate-500" th:text="${#numbers.formatDecimal(total, 1, 2)} + ' total'">total</span>
+        </div>
+        <table class="min-w-full text-sm">
+            <thead>
+            <tr class="text-left text-slate-500 border-b bg-slate-50">
+                <th class="py-3 px-4">Invoice</th>
+                <th class="py-3 px-4">Date/Time</th>
+                <th class="py-3 px-4">Payment</th>
+                <th class="py-3 px-4 text-right">Total</th>
+                <th class="py-3 px-4 text-right"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="s : ${sales}" class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="py-3 px-4 font-mono font-semibold text-amber-600" th:text="${s.invoiceNumber}">INV</td>
+                <td class="py-3 px-4" th:text="${#temporals.format(s.saleDate, 'MM-dd HH:mm')}">date</td>
+                <td class="py-3 px-4">
+                    <span th:text="${s.paymentMethod}" th:classappend="${s.paymentMethod.name() == 'CASH'} ? 'bg-green-100 text-green-800' : (${s.paymentMethod.name() == 'CARD'} ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800')"
+                          class="px-2 py-0.5 rounded-full text-xs font-semibold">Method</span>
+                </td>
+                <td class="py-3 px-4 text-right font-semibold">LKR <span th:text="${#numbers.formatDecimal(s.total, 1, 2)}">0.00</span></td>
+                <td class="py-3 px-4 text-right"><a th:href="@{/sales/receipt/{id}(id=${s.id})}" class="text-amber-600 hover:underline text-xs">Receipt</a></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(sales)}"><td colspan="5" class="py-4 px-4 text-slate-400 text-center">No sales in this month.</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="bg-white shadow rounded-xl p-5">
+        <h2 class="font-semibold text-slate-700 mb-3">Recent Months</h2>
+        <div class="flex flex-wrap gap-2">
+            <a th:each="m : ${recentMonths}" th:href="@{/reports/monthly(month=${m})}"
+               th:classappend="${selectedMonth == m} ? 'bg-amber-500 text-slate-900' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+               class="px-3 py-1.5 rounded-lg text-sm font-medium"
+               th:text="${#temporals.format(m, 'yyyy-MM')}">month</a>
+        </div>
+    </div>
+</main>
+
+<script>
+    function dayLabels() {
+        return [
+            <th:block th:each="e : ${perDay}">'<th:text="${e.key}">0</th:text>',</th:block>
+        ];
+    }
+    function dayValues() {
+        return [
+            <th:block th:each="e : ${perDay}">${e.value},</th:block>
+        ];
+    }
+    const ctx = document.getElementById('dailyChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: dayLabels(),
+                datasets: [{
+                    label: 'Sales (LKR)',
+                    data: dayValues(),
+                    backgroundColor: '#f59e0b',
+                    borderRadius: 6
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+    }
+</script>
+</body>
+</html>

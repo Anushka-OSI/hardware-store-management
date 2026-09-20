@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Products')}"></head>
+<body class="bg-slate-100 min-h-screen">
+<nav th:replace="~{fragments/layout :: appNav}"></nav>
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main class="max-w-7xl mx-auto px-4 py-6">
+    <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">Products &amp; Inventory</h1>
+            <p class="text-slate-500 text-sm">Manage products, prices, photos and stock levels.</p>
+        </div>
+        <a th:href="@{/products/new}" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-4 py-2 rounded-lg">+ Add Product</a>
+    </div>
+
+    <form method="get" th:action="@{/products}" class="flex gap-2 mb-3 max-w-xl">
+        <input type="text" name="q" th:value="${q}" placeholder="Search by name, SKU, brand or category..."
+               class="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+        <button class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-5 py-2 rounded-lg">Search</button>
+    </form>
+    <div class="flex gap-2 mb-6">
+        <a th:href="@{/products}" th:classappend="${filter == null} ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 border border-slate-200'"
+           class="px-3 py-1.5 rounded-full text-sm">All</a>
+        <a th:href="@{/products(filter='low')}" th:classappend="${filter == 'low'} ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 border border-slate-200'"
+           class="px-3 py-1.5 rounded-full text-sm">Low Stock</a>
+        <a th:href="@{/products(filter='out')}" th:classappend="${filter == 'out'} ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 border border-slate-200'"
+           class="px-3 py-1.5 rounded-full text-sm">Out of Stock</a>
+    </div>
+
+    <div class="bg-white shadow rounded-xl overflow-hidden">
+        <table class="min-w-full text-sm">
+            <thead>
+            <tr class="text-left text-slate-500 border-b bg-slate-50">
+                <th class="py-3 px-4">Photo</th>
+                <th class="py-3 px-4">Product</th>
+                <th class="py-3 px-4">Category</th>
+                <th class="py-3 px-4">Price</th>
+                <th class="py-3 px-4">Stock</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4 text-right">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="p : ${products}" class="border-b border-slate-100 hover:bg-slate-50 align-middle">
+                <td class="py-2 px-4">
+                    <div class="w-12 h-12 rounded bg-slate-100 flex items-center justify-center overflow-hidden">
+                        <img th:if="${p.photoPath != null}" th:src="@{/uploads/{name}(name=${p.photoPath})}" class="h-full w-full object-contain">
+                        <span th:unless="${p.photoPath != null}" class="text-slate-300 text-xl">&#128717;</span>
+                    </div>
+                </td>
+                <td class="py-2 px-4">
+                    <div class="font-medium text-slate-800" th:text="${p.name}">name</div>
+                    <div class="text-xs text-slate-400" th:text="${p.sku}">SKU</div>
+                </td>
+                <td class="py-2 px-4 text-xs" th:text="${p.category}">cat</td>
+                <td class="py-2 px-4">LKR <span th:text="${#numbers.formatDecimal(p.price, 1, 2)}">0.00</span></td>
+                <td class="py-2 px-4">
+                    <span class="font-semibold" th:text="${p.quantityInStock}">0</span>
+                    <span class="text-xs text-slate-400" th:text="'/ min ' + ${p.minStockLevel}">min</span>
+                </td>
+                <td class="py-2 px-4">
+                    <span th:text="${p.statusLabel}" th:classappend="${p.outOfStock} ? 'bg-red-100 text-red-700' : (${p.lowStock} ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700')"
+                          class="px-2 py-0.5 rounded-full text-xs font-semibold">Status</span>
+                </td>
+                <td class="py-2 px-4 text-right space-x-3 whitespace-nowrap">
+                    <a th:href="@{/products/{id}/edit(id=${p.id})}" class="text-amber-600 hover:underline text-xs font-semibold">Edit</a>
+                    <form th:action="@{/products/{id}/delete(id=${p.id})}" method="post" class="inline"
+                          onsubmit="return confirm('Delete this product?');">
+                        <button type="submit" class="text-red-600 hover:underline text-xs font-semibold">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(products)}"><td colspan="7" class="py-4 px-4 text-slate-400 text-center">No products found.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Customer Requests')}"></head>
+<body class="bg-slate-100 min-h-screen">
+<nav th:replace="~{fragments/layout :: appNav}"></nav>
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main class="max-w-7xl mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">Customer Requests</h1>
+            <p class="text-slate-500 text-sm">Review and respond to requests submitted by customers (no login required).</p>
+        </div>
+        <div class="flex gap-2">
+            <a th:href="@{/requests}" th:classappend="${selected == null} ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 border border-slate-200'"
+               class="px-3 py-1.5 rounded-full text-sm">All</a>
+            <a th:each="s : ${allStatus}" th:href="@{/requests(status=${s})}" th:text="${s}"
+               th:classappend="${selected == s.name()} ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 border border-slate-200'"
+               class="px-3 py-1.5 rounded-full text-sm">Status</a>
+        </div>
+    </div>
+
+    <div class="bg-white shadow rounded-xl overflow-hidden">
+        <table class="min-w-full text-sm">
+            <thead>
+            <tr class="text-left text-slate-500 border-b bg-slate-50">
+                <th class="py-3 px-4">Request ID</th>
+                <th class="py-3 px-4">Customer</th>
+                <th class="py-3 px-4">Message</th>
+                <th class="py-3 px-4">Submitted</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4 text-right"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="r : ${requests}" class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="py-3 px-4 font-mono font-semibold text-amber-600" th:text="${r.requestId}">REQ</td>
+                <td class="py-3 px-4">
+                    <div class="font-medium" th:text="${r.customerName}">Name</div>
+                    <div class="text-xs text-slate-400" th:text="${r.customerPhone}">Phone</div>
+                </td>
+                <td class="py-3 px-4 max-w-xs truncate text-slate-600" th:text="${r.message}">message</td>
+                <td class="py-3 px-4 text-xs text-slate-500" th:text="${#temporals.format(r.createdAt, 'yyyy-MM-dd HH:mm')}">date</td>
+                <td class="py-3 px-4">
+                    <span th:text="${r.status}" th:classappend="${r.status.name() == 'RESOLVED' || r.status.name() == 'CLOSED'} ? 'bg-green-100 text-green-800' : (${r.status.name() == 'IN_PROGRESS'} ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800')"
+                          class="px-2 py-0.5 rounded-full text-xs font-semibold">Status</span>
+                </td>
+                <td class="py-3 px-4 text-right">
+                    <a th:href="@{/requests/{id}(id=${r.id})}" class="text-amber-600 hover:underline text-xs font-semibold">Open &rarr;</a>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(requests)}"><td colspan="6" class="py-4 px-4 text-slate-400 text-center">No requests found.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

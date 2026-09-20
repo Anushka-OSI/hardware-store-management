@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Staff')}"></head>
+<body class="bg-slate-100 min-h-screen">
+<nav th:replace="~{fragments/layout :: appNav}"></nav>
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main class="max-w-7xl mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">Staff Accounts</h1>
+            <p class="text-slate-500 text-sm">Create, edit, change roles and deactivate staff login accounts.</p>
+        </div>
+        <a th:href="@{/staff/new}" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-4 py-2 rounded-lg">+ Add Staff</a>
+    </div>
+
+    <div class="bg-white shadow rounded-xl overflow-hidden">
+        <table class="min-w-full text-sm">
+            <thead>
+            <tr class="text-left text-slate-500 border-b bg-slate-50">
+                <th class="py-3 px-4">Username</th>
+                <th class="py-3 px-4">Full Name</th>
+                <th class="py-3 px-4">Contact</th>
+                <th class="py-3 px-4">Role</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4 text-right">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="u : ${staff}" class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="py-3 px-4 font-medium" th:text="${u.username}">user</td>
+                <td class="py-3 px-4" th:text="${u.fullName}">name</td>
+                <td class="py-3 px-4 text-xs">
+                    <div th:if="${u.email != null}" th:text="${u.email}">email</div>
+                    <div th:if="${u.phone != null}" th:text="${u.phone}">phone</div>
+                </td>
+                <td class="py-3 px-4">
+                    <span th:text="${u.role}" th:classappend="${u.role.name() == 'ADMIN'} ? 'bg-purple-100 text-purple-800' : (${u.role.name() == 'INVENTORY_MANAGER'} ? 'bg-blue-100 text-blue-800' : (${u.role.name() == 'CASHIER'} ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'))"
+                          class="px-2 py-0.5 rounded-full text-xs font-semibold">Role</span>
+                </td>
+                <td class="py-3 px-4">
+                    <span th:if="${u.active}" class="text-green-600 text-xs font-semibold">&#9679; Active</span>
+                    <span th:unless="${u.active}" class="text-red-500 text-xs font-semibold">&#9679; Deactivated</span>
+                </td>
+                <td class="py-3 px-4 text-right space-x-2 whitespace-nowrap">
+                    <a th:href="@{/staff/{id}/edit(id=${u.id})}" class="text-amber-600 hover:underline text-xs">Edit</a>
+                    <form th:action="@{/staff/{id}/toggle-active(id=${u.id})}" method="post" class="inline"
+                          th:if="${currentUser != null && currentUser.id != u.id}">
+                        <button type="submit" th:text="${u.active ? 'Deactivate' : 'Activate'}"
+                                th:classappend="${u.active} ? 'text-red-600 hover:underline' : 'text-green-600 hover:underline'"
+                                class="text-xs">Toggle</button>
+                    </form>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(staff)}"><td colspan="6" class="py-4 px-4 text-slate-400 text-center">No staff accounts yet.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Suppliers')}"></head>
+<body class="bg-slate-100 min-h-screen">
+<nav th:replace="~{fragments/layout :: appNav}"></nav>
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main class="max-w-7xl mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">Suppliers</h1>
+            <p class="text-slate-500 text-sm">Manage supplier accounts and view their purchase history.</p>
+        </div>
+        <a th:href="@{/suppliers/new}" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-4 py-2 rounded-lg">+ Add Supplier</a>
+    </div>
+
+    <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div th:each="s : ${suppliers}" class="bg-white shadow rounded-xl p-5 border border-slate-200"
+             th:classappend="${!s.active} ? 'opacity-60' : ''">
+            <div class="flex justify-between items-start mb-3">
+                <div class="w-11 h-11 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-lg"
+                     th:text="${#strings.substring(s.businessName != null ? s.businessName : s.fullName, 0, 1)}">S</div>
+                <span th:if="${!s.active}" class="bg-red-100 text-red-700 text-xs font-semibold px-2 py-1 rounded">Deactivated</span>
+            </div>
+            <h3 class="font-semibold text-slate-800 text-lg" th:text="${s.businessName != null ? s.businessName : s.fullName}">Business</h3>
+            <p class="text-sm text-slate-500 mb-3" th:text="${s.contactPerson != null ? 'Contact: ' + s.contactPerson : s.fullName}">Contact</p>
+            <div class="text-sm text-slate-600 space-y-1 mb-4">
+                <div th:if="${s.email != null}" class="flex items-center gap-2">&#9993; <span th:text="${s.email}">email</span></div>
+                <div th:if="${s.phone != null}" class="flex items-center gap-2">&#9742; <span th:text="${s.phone}">phone</span></div>
+                <div th:if="${s.address != null}" class="flex items-center gap-2">&#9650; <span th:text="${s.address}">address</span></div>
+                <div th:if="${s.address == null}">&#9993; <span th:text="${s.username}">username</span></div>
+            </div>
+            <div class="flex gap-3 text-sm pt-2 border-t border-slate-100">
+                <a th:href="@{/suppliers/{id}/edit(id=${s.id})}" class="text-amber-600 hover:underline font-semibold">Edit</a>
+                <a th:href="@{/suppliers/{id}/purchase-history(id=${s.id})}" class="text-blue-600 hover:underline font-semibold">Purchase History</a>
+                <form th:action="@{/suppliers/{id}/toggle-active(id=${s.id})}" method="post" class="ml-auto">
+                    <button type="submit" th:text="${s.active ? 'Deactivate' : 'Activate'}"
+                            th:classappend="${s.active} ? 'text-red-600' : 'text-green-600'"
+                            class="font-semibold hover:underline">Toggle</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <p th:if="${#lists.isEmpty(suppliers)}" class="text-slate-500 text-center py-10">No suppliers yet. Add your first supplier.</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Point of Sale')}"></head>
+<body class="bg-slate-100 min-h-screen">
+<nav th:replace="~{fragments/layout :: appNav}"></nav>
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main class="max-w-7xl mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">Point of Sale</h1>
+            <p class="text-slate-500 text-sm">Select items from the catalogue below, add to the bill and process the payment.</p>
+        </div>
+        <a th:href="@{/sales}" class="text-sm text-amber-600 hover:underline">&larr; Today's sales</a>
+    </div>
+
+    <div x-data="cartApp()" class="grid lg:grid-cols-2 gap-6">
+        <!-- ========== PRODUCTS (preloaded) ========== -->
+        <div class="bg-white shadow rounded-xl p-5">
+            <h2 class="font-semibold text-slate-700 mb-3">Items</h2>
+            <div class="max-h-[480px] overflow-y-auto pr-1 space-y-2">
+                <div th:each="p : ${products}" class="flex items-center justify-between border rounded-lg px-3 py-2 bg-slate-50"
+                     th:attr="data-pid=${p.id}, data-name=${p.name}, data-price=${p.price}, data-stock=${p.quantityInStock}, data-os=${p.outOfStock}">
+                    <div class="min-w-0">
+                        <div class="font-medium text-slate-800 truncate">
+                            <span th:text="${p.name}">Product</span>
+                            <span class="text-xs text-slate-400">(<span th:text="${p.sku}">sku</span>)</span>
+                        </div>
+                        <div class="text-xs text-slate-500">
+                            LKR <span th:text="${p.price}">0</span>
+                            <span th:if="${p.supplier != null}" class="text-slate-400"> | <span th:text="${p.supplier.businessName != null ? p.supplier.businessName : p.supplier.fullName}">supplier</span></span>
+                            <span th:if="${p.outOfStock}" class="text-red-600 font-semibold"> | OUT OF STOCK</span>
+                            <span th:if="${!p.outOfStock}" class="text-slate-500"> | Stock: <span th:text="${p.quantityInStock}">0</span></span>
+                        </div>
+                    </div>
+                    <button @click="add($event.currentTarget.closest('[data-pid]'))"
+                            th:disabled="${p.outOfStock}"
+                            th:classappend="${p.outOfStock} ? 'bg-slate-300 cursor-not-allowed' : 'bg-amber-500 hover:bg-amber-600'"
+                            class="text-slate-900 font-semibold px-3 py-1.5 rounded-lg text-sm ml-2 whitespace-nowrap">
+                        <span th:text="${p.outOfStock ? 'Unavailable' : 'Add'}">Add</span>
+                    </button>
+                </div>
+                <p th:if="${#lists.isEmpty(products)}" class="text-slate-400 text-sm text-center py-4">No products available.</p>
+            </div>
+        </div>
+
+        <!-- ========== CART / BILL ========== -->
+        <div class="bg-white shadow rounded-xl flex flex-col">
+            <div class="px-5 py-4 border-b flex justify-between items-center">
+                <h2 class="font-semibold text-slate-700">Current Bill</h2>
+                <button @click="clearCart()" class="text-red-600 hover:underline text-sm"
+                        x-show="cart.length > 0">Clear bill</button>
+            </div>
+
+            <div class="flex-1 p-5 overflow-y-auto max-h-80">
+                <table x-show="cart.length > 0" class="w-full text-sm">
+                    <thead>
+                    <tr class="text-left text-slate-500 border-b text-xs">
+                        <th class="py-2">Item</th>
+                        <th class="py-2 w-20 text-center">Qty</th>
+                        <th class="py-2 text-right">Price</th>
+                        <th class="py-2 text-right">Total</th>
+                        <th class="py-2 w-8"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <template x-for="(item, i) in cart" :key="item.productId">
+                        <tr class="border-b border-slate-100 align-middle">
+                            <td class="py-2 pr-2">
+                                <div class="font-medium text-slate-800" x-text="item.name"></div>
+                            </td>
+                            <td class="py-2 text-center">
+                                <input type="number" min="1" x-model.number="item.qty" @input="itemChanged(item)"
+                                       class="w-14 px-2 py-1 border border-slate-300 rounded text-center text-sm">
+                            </td>
+                            <td class="py-2 text-right text-slate-600" x-text="item.price.toFixed(2)"></td>
+                            <td class="py-2 text-right font-semibold" x-text="(item.price * item.qty).toFixed(2)"></td>
+                            <td class="py-2 text-right">
+                                <button @click="removeItem(i)" class="text-red-500 hover:text-red-700">&times;</button>
+                            </td>
+                        </tr>
+                    </template>
+                    </tbody>
+                </table>
+                <p x-show="cart.length === 0" class="text-slate-400 text-center py-8 text-sm">No items on the bill. Tap "Add" next to an item above.</p>
+            </div>
+
+            <!-- ====== Totals ====== -->
+            <div class="px-5 py-4 border-t bg-slate-50">
+                <div class="flex justify-between text-sm mb-1">
+                    <span class="text-slate-600">Subtotal</span>
+                    <span class="font-semibold" x-text="'LKR ' + subtotal().toFixed(2)"></span>
+                </div>
+                <div class="flex justify-between items-center text-sm mb-1">
+                    <label class="text-slate-600">Discount (LKR)</label>
+                    <input type="number" min="0" step="0.01" x-model.number="discount" @input="recalc()"
+                           class="w-28 px-2 py-1 border border-slate-300 rounded text-right text-sm">
+                </div>
+                <div class="flex justify-between items-center text-lg font-bold text-slate-800 border-t border-slate-200 pt-2 mb-1">
+                    <span>Total</span>
+                    <span x-text="'LKR ' + total().toFixed(2)"></span>
+                </div>
+                <div x-show="discount > 0" class="text-xs text-green-600 text-right mb-1"
+                     x-text="'Saved: LKR ' + discount.toFixed(2)"></div>
+            </div>
+
+            <!-- ====== Payment form ====== -->
+            <form th:action="@{/sales/checkout}" method="post" class="px-5 py-4 border-t">
+                <template x-for="(item, i) in cart" :key="item.productId">
+                    <span>
+                        <input type="hidden" name="productIds" :value="item.productId">
+                        <input type="hidden" name="quantities" :value="item.qty">
+                    </span>
+                </template>
+                <input type="hidden" name="discount" :value="discount">
+                <div class="grid sm:grid-cols-4 gap-3 items-end">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Payment Method *</label>
+                        <select x-model="paymentMethod" name="paymentMethod" class="w-full px-2 py-2 border border-slate-300 rounded text-sm">
+                            <option value="CASH">Cash</option>
+                            <option value="CARD">Card</option>
+                            <option value="DIGITAL">Digital (QR / Bank)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Amount Paid *</label>
+                        <input type="number" min="0" step="0.01" x-model.number="amountPaid" name="amountPaid"
+                               class="w-full px-2 py-2 border border-slate-300 rounded text-right text-sm"
+                               :class="amountPaid < total() && cart.length > 0 ? 'border-red-400' : ''">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Change Return</label>
+                        <div class="py-2 font-semibold text-green-700" x-text="'LKR ' + Math.max(0, amountPaid - total()).toFixed(2)"></div>
+                    </div>
+                    <button type="submit"
+                            :disabled="cart.length === 0 || amountPaid < total()"
+                            :class="cart.length === 0 || amountPaid < total() ? 'bg-slate-300 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'"
+                            class="text-white font-bold px-6 py-2.5 rounded-lg text-sm">
+                        Complete Sale
+                    </button>
+                </div>
+                <p x-show="cart.length > 0 && amountPaid < total()" class="text-xs text-red-500 mt-2">
+                    Full payment not completed. Need LKR <span x-text="(total() - amountPaid).toFixed(2)"></span> more.
+                </p>
+                <p class="text-xs text-slate-400 mt-2">Out-of-stock items are blocked and stock is reduced when the sale is completed.</p>
+            </form>
+        </div>
+    </div>
+</main>
+
+<script>
+    function cartApp() {
+        return {
+            cart: [],
+            discount: 0,
+            paymentMethod: 'CASH',
+            amountPaid: 0,
+            isInCart(id) { return this.cart.some(i => i.productId === id); },
+            add(row) {
+                const d = row.dataset;
+                const id = parseInt(d.pid, 10);
+                if (d.os === 'true') return;
+                if (this.isInCart(id)) return;
+                this.cart.push({ productId: id, name: d.name, price: parseFloat(d.price), qty: 1, stock: parseInt(d.stock, 10) });
+            },
+            removeItem(i) { this.cart.splice(i, 1); this.recalc(); },
+            clearCart() { this.cart = []; this.discount = 0; this.amountPaid = 0; },
+            itemChanged(item) {
+                if (item.qty > item.stock) { item.qty = item.stock; alert('Only ' + item.stock + ' in stock.'); }
+                if (item.qty < 1) item.qty = 1;
+            },
+            subtotal() { return this.cart.reduce((s, i) => s + i.price * i.qty, 0); },
+            total() { return Math.max(0, this.subtotal() - (this.discount || 0)); },
+            recalc() { if (this.discount > this.subtotal()) this.discount = this.subtotal(); }
+        };
+    }
+</script>
+</body>
+</html>

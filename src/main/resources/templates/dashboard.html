@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Dashboard')}"></head>
+<body class="bg-slate-100 min-h-screen">
+<nav th:replace="~{fragments/layout :: appNav}"></nav>
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main class="max-w-7xl mx-auto px-4 py-6">
+    <h1 class="text-2xl font-bold text-slate-800 mb-1">Welcome back!</h1>
+    <p class="text-slate-500 mb-6" th:text="'Logged in as ' + (${currentUser != null ? currentUser.fullName : ''}) + ' (' + ${currentRole} + ')'">Welcome</p>
+
+    <!-- ===== Stat cards ===== -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white rounded-xl shadow p-5 border-l-4 border-amber-500">
+            <div class="text-3xl font-bold text-slate-800" th:text="${productCount}">0</div>
+            <div class="text-sm text-slate-500">Products</div>
+        </div>
+        <div class="bg-white rounded-xl shadow p-5 border-l-4 border-orange-500">
+            <div class="text-3xl font-bold text-orange-600" th:text="${lowStockCount}">0</div>
+            <div class="text-sm text-slate-500">Low Stock Items</div>
+        </div>
+        <div class="bg-white rounded-xl shadow p-5 border-l-4 border-red-500">
+            <div class="text-3xl font-bold text-red-600" th:text="${outOfStockCount}">0</div>
+            <div class="text-sm text-slate-500">Out of Stock</div>
+        </div>
+        <div class="bg-white rounded-xl shadow p-5 border-l-4 border-green-500">
+            <div class="text-3xl font-bold text-green-600" th:text="${todaySalesCount}">0</div>
+            <div class="text-sm text-slate-500">Today's Sales</div>
+        </div>
+    </div>
+
+    <!-- ===== Inventory warnings for IM / Admin ===== -->
+    <div th:if="${currentRole == 'INVENTORY_MANAGER' || currentRole == 'ADMIN'}" class="grid md:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow p-5">
+            <h2 class="font-semibold text-slate-700 mb-3 text-lg">&#9888; Low Stock Alerts</h2>
+            <p class="text-sm text-slate-400 mb-2">Items approaching the minimum stock level.</p>
+            <ul class="space-y-2">
+                <li th:each="p : ${lowStockProducts}" class="flex justify-between items-center bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">
+                    <span class="text-sm text-slate-700">
+                        <span th:text="${p.name}">Product</span>
+                        <span class="text-slate-400">(<span th:text="${p.sku}">sku</span>)</span>
+                    </span>
+                    <span class="text-xs font-semibold text-orange-700 bg-orange-100 px-2 py-1 rounded-full">
+                        <span th:text="${p.quantityInStock}"></span> left / min <span th:text="${p.minStockLevel}"></span>
+                    </span>
+                </li>
+                <li th:if="${#lists.isEmpty(lowStockProducts)}" class="text-sm text-slate-400">No low stock items. All good!</li>
+            </ul>
+        </div>
+
+        <div class="bg-white rounded-xl shadow p-5">
+            <h2 class="font-semibold text-slate-700 mb-3 text-lg">&#10060; Out of Stock Alerts</h2>
+            <p class="text-sm text-slate-400 mb-2">Items with zero stock - unavailable to customers.</p>
+            <ul class="space-y-2">
+                <li th:each="p : ${outOfStockProducts}" class="flex justify-between items-center bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                    <span class="text-sm text-slate-700">
+                        <span th:text="${p.name}">Product</span>
+                        <span class="text-slate-400">(<span th:text="${p.sku}">sku</span>)</span>
+                    </span>
+                    <a th:href="@{/products/{id}/edit(id=${p.id})}" class="text-xs font-semibold text-red-700 hover:underline">Update stock &rarr;</a>
+                </li>
+                <li th:if="${#lists.isEmpty(outOfStockProducts)}" class="text-sm text-slate-400">No items out of stock.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ===== Admin quick stats ===== -->
+    <div th:if="${currentRole == 'ADMIN'}" class="grid md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow p-5">
+            <h2 class="font-semibold text-slate-700 mb-2">Staff</h2>
+            <div class="text-3xl font-bold text-slate-800" th:text="${staffCount}">0</div>
+            <a th:href="@{/staff}" class="text-sm text-amber-600 hover:underline mt-1 inline-block">Manage staff &rarr;</a>
+        </div>
+        <div class="bg-white rounded-xl shadow p-5">
+            <h2 class="font-semibold text-slate-700 mb-2">Suppliers</h2>
+            <div class="text-3xl font-bold text-slate-800" th:text="${supplierCount}">0</div>
+            <a th:href="@{/suppliers}" class="text-sm text-amber-600 hover:underline mt-1 inline-block">Manage suppliers &rarr;</a>
+        </div>
+        <div class="bg-white rounded-xl shadow p-5">
+            <h2 class="font-semibold text-slate-700 mb-2">Pending Customer Requests</h2>
+            <div class="text-3xl font-bold text-slate-800" th:text="${pendingRequests}">0</div>
+            <a th:href="@{/requests}" class="text-sm text-amber-600 hover:underline mt-1 inline-block">View requests &rarr;</a>
+        </div>
+    </div>
+
+    <!-- ===== Recent purchase orders ===== -->
+    <div th:if="${currentRole == 'INVENTORY_MANAGER' || currentRole == 'ADMIN'}" class="bg-white rounded-xl shadow p-5 mb-8">
+        <h2 class="font-semibold text-slate-700 mb-3 text-lg">Recent Purchase Orders</h2>
+        <p class="text-sm text-slate-400 mb-3"><span th:text="${pendingOrders}"></span> order(s) currently active.</p>
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead>
+                <tr class="text-left text-slate-500 border-b">
+                    <th class="py-2 pr-4">PO #</th>
+                    <th class="py-2 pr-4">Supplier</th>
+                    <th class="py-2 pr-4">Date</th>
+                    <th class="py-2 pr-4">Total</th>
+                    <th class="py-2">Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="po : ${recentOrders}" class="border-b border-slate-100">
+                    <td class="py-2 pr-4 font-medium"><a th:href="@{/purchase-orders/{id}(id=${po.id})}" th:text="${po.poNumber}" class="text-amber-600 hover:underline">PO</a></td>
+                    <td class="py-2 pr-4" th:text="${po.supplier.businessName != null ? po.supplier.businessName : po.supplier.fullName}">Supplier</td>
+                    <td class="py-2 pr-4" th:text="${#temporals.format(po.orderDate, 'yyyy-MM-dd')}">Date</td>
+                    <td class="py-2 pr-4">LKR <span th:text="${#numbers.formatDecimal(po.totalCost, 1, 2)}">0.00</span></td>
+                    <td class="py-2">
+                        <span th:text="${po.status}" th:classappend="${po.status.name() == 'RECEIVED'} ? 'bg-green-100 text-green-800' : (${po.status.name() == 'CANCELLED'} ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800')"
+                              class="px-2 py-0.5 rounded-full text-xs font-semibold">Status</span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(recentOrders)}"><td colspan="5" class="py-3 text-slate-400">No purchase orders yet.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ===== Supplier landing ===== -->
+    <div th:if="${supplierLanding}" class="bg-white rounded-xl shadow p-5 mb-8">
+        <h2 class="font-semibold text-slate-700 mb-3 text-lg">My Purchase Orders</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead>
+                <tr class="text-left text-slate-500 border-b">
+                    <th class="py-2 pr-4">PO #</th>
+                    <th class="py-2 pr-4">Order Date</th>
+                    <th class="py-2 pr-4">Expected</th>
+                    <th class="py-2 pr-4">Total</th>
+                    <th class="py-2">Status</th>
+                    <th class="py-2"></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="po : ${myOrders}" class="border-b border-slate-100">
+                    <td class="py-2 pr-4 font-medium"><a th:href="@{/purchase-orders/{id}(id=${po.id})}" th:text="${po.poNumber}" class="text-amber-600 hover:underline">PO</a></td>
+                    <td class="py-2 pr-4" th:text="${#temporals.format(po.orderDate, 'yyyy-MM-dd')}">Date</td>
+                    <td class="py-2 pr-4" th:text="${po.expectedDeliveryDate != null ? #temporals.format(po.expectedDeliveryDate, 'yyyy-MM-dd') : 'N/A'}">Exp</td>
+                    <td class="py-2 pr-4">LKR <span th:text="${#numbers.formatDecimal(po.totalCost, 1, 2)}">0.00</span></td>
+                    <td class="py-2">
+                        <span th:text="${po.status}" th:classappend="${po.status.name() == 'RECEIVED'} ? 'bg-green-100 text-green-800' : (${po.status.name() == 'CANCELLED'} ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800')"
+                              class="px-2 py-0.5 rounded-full text-xs font-semibold">Status</span>
+                    </td>
+                    <td class="py-2 text-right">
+                        <a th:href="@{/purchase-orders/{id}(id=${po.id})}" class="text-sm text-amber-600 hover:underline">View &amp; deliver &rarr;</a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(myOrders)}"><td colspan="6" class="py-3 text-slate-400">No purchase orders assigned to you yet.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ===== Cashier: today's sales ===== -->
+    <div th:if="${currentRole == 'CASHIER'}" class="bg-white rounded-xl shadow p-5 mb-8">
+        <h2 class="font-semibold text-slate-700 mb-3 text-lg">Today's Sales Transactions</h2>
+        <a th:href="@{/sales/pos}" class="inline-block bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-4 py-2 rounded-lg mb-4 text-sm">+ New Sale (POS)</a>
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead>
+                <tr class="text-left text-slate-500 border-b">
+                    <th class="py-2 pr-4">Invoice</th>
+                    <th class="py-2 pr-4">Time</th>
+                    <th class="py-2 pr-4">Method</th>
+                    <th class="py-2 pr-4">Total</th>
+                    <th class="py-2"></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="s : ${todaySales}" class="border-b border-slate-100">
+                    <td class="py-2 pr-4 font-medium" th:text="${s.invoiceNumber}">INV</td>
+                    <td class="py-2 pr-4" th:text="${#temporals.format(s.saleDate, 'HH:mm')}">Time</td>
+                    <td class="py-2 pr-4" th:text="${s.paymentMethod}">Method</td>
+                    <td class="py-2 pr-4">LKR <span th:text="${#numbers.formatDecimal(s.total, 1, 2)}">0.00</span></td>
+                    <td class="py-2 text-right"><a th:href="@{/sales/receipt/{id}(id=${s.id})}" class="text-amber-600 hover:underline text-xs">Receipt</a></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(todaySales)}"><td colspan="5" class="py-3 text-slate-400">No sales today yet.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="text-right mt-3 font-semibold text-slate-700">Today's total: LKR <span th:text="${#numbers.formatDecimal(todaySalesTotal, 1, 2)}">0.00</span></p>
+    </div>
+</main>
+</body>
+</html>

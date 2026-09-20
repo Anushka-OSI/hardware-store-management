@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Staff Form')}"></head>
+<body class="bg-slate-100 min-h-screen">
+<nav th:replace="~{fragments/layout :: appNav}"></nav>
+
+<main class="max-w-2xl mx-auto px-4 py-6">
+    <h1 class="text-2xl font-bold text-slate-800 mb-6">Staff Account Form</h1>
+
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <div class="bg-white shadow rounded-xl p-6">
+        <form th:action="${staffForm.id() != null ? '/staff/update' : '/staff/save'}" method="post" class="space-y-4">
+            <input type="hidden" name="id" th:value="${staffForm.id()}">
+            <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Username *</label>
+                    <input type="text" name="username" th:value="${staffForm.username()}" required
+                           th:readonly="${staffForm.id() != null}"
+                           class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                           th:classappend="${staffForm.id() != null} ? 'bg-slate-100' : ''">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Full Name *</label>
+                    <input type="text" name="fullName" th:value="${staffForm.fullName()}" required
+                           class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+                </div>
+            </div>
+
+            <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Email</label>
+                    <input type="email" name="email" th:value="${staffForm.email()}"
+                           class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Phone</label>
+                    <input type="text" name="phone" th:value="${staffForm.phone()}"
+                           class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+                </div>
+            </div>
+
+            <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">
+                        Password <span th:text="${staffForm.id() != null ? '(leave blank to keep current)' : '*'}" class="text-xs text-slate-400"></span>
+                    </label>
+                    <input type="password" name="password" th:required="${staffForm.id() == null}"
+                           class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Role *</label>
+                    <select name="role" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                            th:disabled="${staffForm.id() != null && currentRole == 'ADMIN' && staffForm.role().name() == 'ADMIN'}">
+                        <option th:each="r : ${allRoles}" th:value="${r}" th:text="${r}"
+                                th:selected="${staffForm.role() == r}">Role</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="flex items-center gap-2 text-sm text-slate-600">
+                    <input type="hidden" name="active" value="false">
+                    <input type="checkbox" name="active" value="true"
+                           th:checked="${staffForm.active()}" class="w-4 h-4 text-amber-500">
+                    Account is active (can login)
+                </label>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-6 py-2 rounded-lg">
+                    Save Account
+                </button>
+                <a th:href="@{/staff}" class="text-slate-500 px-4 py-2">Cancel</a>
+            </div>
+        </form>
+    </div>
+</main>
+</body>
+</html>

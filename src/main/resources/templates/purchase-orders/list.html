@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Purchase Orders')}"></head>
+<body class="bg-slate-100 min-h-screen">
+<nav th:replace="~{fragments/layout :: appNav}"></nav>
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main class="max-w-7xl mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">Purchase Orders</h1>
+            <p class="text-slate-500 text-sm" th:if="${!supplierView}">Order stock from suppliers and track deliveries.</p>
+            <p class="text-slate-500 text-sm" th:if="${supplierView}">View your orders and record deliveries.</p>
+        </div>
+        <div class="flex gap-2">
+            <a th:if="${!supplierView}" th:href="@{/purchase-orders/new}" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-4 py-2 rounded-lg">+ New Order</a>
+            <a th:if="${!supplierView}" th:href="@{/purchase-orders/history}" class="bg-white border border-slate-300 text-slate-600 px-4 py-2 rounded-lg text-sm hover:bg-slate-50">History</a>
+        </div>
+    </div>
+
+    <div class="bg-white shadow rounded-xl overflow-hidden">
+        <table class="min-w-full text-sm">
+            <thead>
+            <tr class="text-left text-slate-500 border-b bg-slate-50">
+                <th class="py-3 px-4">PO #</th>
+                <th class="py-3 px-4">Supplier</th>
+                <th class="py-3 px-4">Order Date</th>
+                <th class="py-3 px-4">Expected</th>
+                <th class="py-3 px-4">Total</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4 text-right"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="po : ${orders}" class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="py-3 px-4 font-mono font-semibold text-amber-600" th:text="${po.poNumber}">PO</td>
+                <td class="py-3 px-4" th:text="${po.supplier.businessName != null ? po.supplier.businessName : po.supplier.fullName}">Supplier</td>
+                <td class="py-3 px-4" th:text="${#temporals.format(po.orderDate, 'yyyy-MM-dd')}">date</td>
+                <td class="py-3 px-4" th:text="${po.expectedDeliveryDate != null ? #temporals.format(po.expectedDeliveryDate, 'yyyy-MM-dd') : 'N/A'}">exp</td>
+                <td class="py-3 px-4">LKR <span th:text="${#numbers.formatDecimal(po.totalCost, 1, 2)}">0.00</span></td>
+                <td class="py-3 px-4">
+                    <span th:text="${po.status}" th:classappend="${po.status.name() == 'RECEIVED'} ? 'bg-green-100 text-green-800' : (${po.status.name() == 'CANCELLED'} ? 'bg-red-100 text-red-800' : (${po.status.name() == 'PARTIALLY_RECEIVED'} ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'))"
+                          class="px-2 py-0.5 rounded-full text-xs font-semibold">Status</span>
+                </td>
+                <td class="py-3 px-4 text-right">
+                    <a th:href="@{/purchase-orders/{id}(id=${po.id})}" class="text-amber-600 hover:underline text-xs font-semibold">View &rarr;</a>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(orders)}"><td colspan="7" class="py-4 px-4 text-slate-400 text-center">
+                <span th:if="${historyView}">No finished purchase orders yet.</span>
+                <span th:if="${!historyView}">No purchase orders yet.</span>
+            </td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Supplier view: quick actions section -->
+    <div th:if="${supplierView && !#lists.isEmpty(orders)}" class="mt-6 bg-white shadow rounded-xl p-4 text-sm text-slate-500">
+        <strong class="text-slate-700">For suppliers:</strong> open an order to record delivered quantities. The store will confirm and add stock to inventory.
+    </div>
+</main>
+</body>
+</html>

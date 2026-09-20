@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Login')}"></head>
+<body class="min-h-screen bg-slate-100 flex items-center justify-center">
+    <div class="w-full max-w-md mx-4">
+        <div class="text-center mb-6">
+            <div class="text-5xl mb-2">&#9881;</div>
+            <h1 class="text-3xl font-bold text-slate-800">Guruge Hardware</h1>
+            <p class="text-slate-500 mt-1">Management System - Staff Login</p>
+        </div>
+
+        <div th:if="${param.error}" class="bg-red-50 border-l-4 border-red-600 text-red-700 px-4 py-3 mb-4 rounded-r text-sm">
+            Invalid username or password. Please try again.
+        </div>
+        <div th:if="${param.logout}" class="bg-green-50 border-l-4 border-green-600 text-green-700 px-4 py-3 mb-4 rounded-r text-sm">
+            You have been logged out.
+        </div>
+
+        <div class="bg-white shadow-lg rounded-xl p-8">
+            <h2 class="text-xl font-semibold text-slate-800 mb-6 text-center">Sign in to your account</h2>
+            <form th:action="@{/login}" method="post" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Username</label>
+                    <input type="text" name="username" required autofocus
+                           class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Password</label>
+                    <input type="password" name="password" required
+                           class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500">
+                </div>
+                <button type="submit"
+                        class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold py-2.5 rounded-lg transition">
+                    Login
+                </button>
+            </form>
+        </div>
+
+        <div class="text-center mt-6">
+            <a th:href="@{/catalogue}" class="text-slate-500 hover:text-amber-600 text-sm">&larr; Back to customer store</a>
+        </div>
+    </div>
+</body>
+</html>

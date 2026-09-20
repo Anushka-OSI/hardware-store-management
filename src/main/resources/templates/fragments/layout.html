@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:fragment="head(pageTitle)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Guruge Hardware | ' + ${pageTitle}">Guruge Hardware</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <style> [x-cloak]{display:none !important} </style>
+</head>
+
+<!-- ================= APP NAV (logged-in users, role based) ================= -->
+<nav th:fragment="appNav" class="bg-slate-900 text-white sticky top-0 z-20">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex items-center justify-between h-14">
+            <a th:href="@{/dashboard}" class="font-bold text-lg flex items-center gap-2">
+                <span class="text-amber-400 text-xl">&#9881;</span>
+                Guruge Hardware
+            </a>
+            <div class="flex items-center gap-1 text-sm overflow-x-auto">
+                <a th:href="@{/dashboard}" th:classappend="${active=='dashboard'} ? 'bg-slate-700' : ''"
+                   class="px-3 py-2 rounded hover:bg-slate-700">Dashboard</a>
+
+                <a th:if="${currentRole=='ADMIN'}" th:href="@{/staff}" th:classappend="${active=='staff'} ? 'bg-slate-700' : ''"
+                   class="px-3 py-2 rounded hover:bg-slate-700">Staff</a>
+
+                <a th:if="${currentRole=='ADMIN'}" th:href="@{/requests}" th:classappend="${active=='requests'} ? 'bg-slate-700' : ''"
+                   class="px-3 py-2 rounded hover:bg-slate-700">Requests</a>
+
+                <a th:if="${currentRole=='ADMIN' || currentRole=='INVENTORY_MANAGER'}" th:href="@{/products}" th:classappend="${active=='products'} ? 'bg-slate-700' : ''"
+                   class="px-3 py-2 rounded hover:bg-slate-700">Products</a>
+
+                <a th:if="${currentRole=='ADMIN' || currentRole=='INVENTORY_MANAGER'}" th:href="@{/suppliers}" th:classappend="${active=='suppliers'} ? 'bg-slate-700' : ''"
+                   class="px-3 py-2 rounded hover:bg-slate-700">Suppliers</a>
+
+                <a th:if="${currentRole=='ADMIN' || currentRole=='INVENTORY_MANAGER' || currentRole=='SUPPLIER'}" th:href="@{/purchase-orders}" th:classappend="${active=='purchase-orders'} ? 'bg-slate-700' : ''"
+                   class="px-3 py-2 rounded hover:bg-slate-700">Purchase Orders</a>
+
+                <a th:if="${currentRole=='ADMIN' || currentRole=='CASHIER' || currentRole=='INVENTORY_MANAGER'}" th:href="@{/sales}" th:classappend="${active=='sales'} ? 'bg-slate-700' : ''"
+                   class="px-3 py-2 rounded hover:bg-slate-700">Sales</a>
+
+                <a th:if="${currentRole=='CASHIER' || currentRole=='ADMIN'}" th:href="@{/sales/pos}" th:classappend="${active=='pos'} ? 'bg-slate-700' : ''"
+                   class="px-3 py-2 rounded hover:bg-slate-700">Point of Sale</a>
+
+                <a th:href="@{/reports/daily}" th:classappend="${active=='reports'} ? 'bg-slate-700' : ''"
+                   class="px-3 py-2 rounded hover:bg-slate-700">Reports</a>
+
+                <a th:href="@{/catalogue}" target="_blank" class="px-3 py-2 rounded hover:bg-slate-700 text-amber-300">Store View</a>
+            </div>
+            <div class="flex items-center gap-3 text-sm">
+                <div class="text-right hidden sm:block">
+                    <div class="font-medium leading-tight" th:text="${currentUser != null ? currentUser.fullName : ''}">User</div>
+                    <div class="text-xs text-amber-300 uppercase" th:text="${currentRole}">role</div>
+                </div>
+                <form th:action="@{/logout}" method="post">
+                    <button class="bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded text-sm">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- ================= PUBLIC NAV (customers, no login) ================= -->
+<nav th:fragment="publicNav" class="bg-amber-500">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex items-center justify-between h-14">
+            <a th:href="@{/catalogue}" class="font-bold text-lg text-slate-900">&#9881; Guruge Hardware</a>
+            <div class="flex items-center gap-2 text-sm">
+                <a th:href="@{/catalogue}" th:classappend="${active=='catalogue'} ? 'underline' : ''" class="px-2 py-1 hover:underline font-medium text-slate-900">Shop</a>
+                <a th:href="@{/request}" th:classappend="${active=='request'} ? 'underline' : ''" class="px-2 py-1 hover:underline font-medium text-slate-900">Submit Request</a>
+                <a th:href="@{/request/status}" th:classappend="${active=='status'} ? 'underline' : ''" class="px-2 py-1 hover:underline font-medium text-slate-900">Check Request</a>
+                <a th:href="@{/login}" class="bg-slate-900 text-white px-3 py-1.5 rounded">Staff Login</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- ================= FLASH MESSAGES ================= -->
+<div th:fragment="flash">
+    <div th:if="${successMessage}" class="mx-auto max-w-7xl px-4 mt-4">
+        <div class="bg-green-100 border-l-4 border-green-600 text-green-800 px-4 py-3 rounded-r shadow-sm flex justify-between items-start">
+            <span th:text="${successMessage}">Success</span>
+            <button type="button" onclick="this.parentElement.remove()" class="text-green-800 font-bold">&times;</button>
+        </div>
+    </div>
+    <div th:if="${errorMessage}" class="mx-auto max-w-7xl px-4 mt-4">
+        <div class="bg-red-100 border-l-4 border-red-600 text-red-800 px-4 py-3 rounded-r shadow-sm flex justify-between items-start">
+            <span th:text="${errorMessage}">Error</span>
+            <button type="button" onclick="this.parentElement.remove()" class="text-red-800 font-bold">&times;</button>
+        </div>
+    </div>
+</div>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Sales')}"></head>
+<body class="bg-slate-100 min-h-screen">
+<nav th:replace="~{fragments/layout :: appNav}"></nav>
+<div th:replace="~{fragments/layout :: flash}"></div>
+
+<main class="max-w-6xl mx-auto px-4 py-6">
+    <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">Sales</h1>
+            <p class="text-slate-500 text-sm">View sales for a date and reprint receipts.</p>
+        </div>
+        <div class="flex gap-2">
+            <form method="get" th:action="@{/sales}" class="flex gap-2">
+                <input type="date" name="date" th:value="${#temporals.format(date, 'yyyy-MM-dd')}"
+                       class="px-3 py-2 border border-slate-300 rounded-lg">
+                <button class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-4 py-2 rounded-lg">View</button>
+            </form>
+            <a th:if="${currentRole == 'CASHIER' || currentRole == 'ADMIN'}" th:href="@{/sales/pos}"
+               class="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg">+ New Sale (POS)</a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white shadow rounded-xl p-4 border-l-4 border-amber-500">
+            <div class="text-sm text-slate-500">Date</div>
+            <div class="text-lg font-bold" th:text="${#temporals.format(date, 'yyyy-MM-dd')}">date</div>
+        </div>
+        <div class="bg-white shadow rounded-xl p-4 border-l-4 border-blue-500">
+            <div class="text-sm text-slate-500">Transactions</div>
+            <div class="text-lg font-bold" th:text="${count}">0</div>
+        </div>
+        <div class="bg-white shadow rounded-xl p-4 border-l-4 border-green-500">
+            <div class="text-sm text-slate-500">Total Sales</div>
+            <div class="text-lg font-bold text-green-700">LKR <span th:text="${#numbers.formatDecimal(total, 1, 2)}">0.00</span></div>
+        </div>
+    </div>
+
+    <div class="bg-white shadow rounded-xl overflow-hidden">
+        <table class="min-w-full text-sm">
+            <thead>
+            <tr class="text-left text-slate-500 border-b bg-slate-50">
+                <th class="py-3 px-4">Invoice #</th>
+                <th class="py-3 px-4">Time</th>
+                <th class="py-3 px-4">Cashier</th>
+                <th class="py-3 px-4">Items</th>
+                <th class="py-3 px-4">Payment</th>
+                <th class="py-3 px-4 text-right">Total</th>
+                <th class="py-3 px-4 text-right"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="s : ${sales}" class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="py-3 px-4 font-mono font-semibold text-amber-600" th:text="${s.invoiceNumber}">INV</td>
+                <td class="py-3 px-4" th:text="${#temporals.format(s.saleDate, 'HH:mm:ss')}">time</td>
+                <td class="py-3 px-4" th:text="${s.cashier.fullName}">cashier</td>
+                <td class="py-3 px-4 text-slate-500" th:text="${#lists.size(s.items)}">0</td>
+                <td class="py-3 px-4">
+                    <span th:text="${s.paymentMethod}" th:classappend="${s.paymentMethod.name() == 'CASH'} ? 'bg-green-100 text-green-800' : (${s.paymentMethod.name() == 'CARD'} ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800')"
+                          class="px-2 py-0.5 rounded-full text-xs font-semibold">Method</span>
+                </td>
+                <td class="py-3 px-4 text-right font-semibold">LKR <span th:text="${#numbers.formatDecimal(s.total, 1, 2)}">0.00</span></td>
+                <td class="py-3 px-4 text-right">
+                    <a th:href="@{/sales/receipt/{id}(id=${s.id})}" class="text-amber-600 hover:underline text-xs font-semibold">Receipt</a>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(sales)}"><td colspan="7" class="py-4 px-4 text-slate-400 text-center">No sales on this date.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

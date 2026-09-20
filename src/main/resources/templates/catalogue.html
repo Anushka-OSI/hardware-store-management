@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Store Catalogue')}"></head>
+<body class="bg-slate-100 min-h-screen">
+<nav th:replace="~{fragments/layout :: publicNav}"></nav>
+
+<main class="max-w-7xl mx-auto px-4 py-6">
+    <h1 class="text-2xl font-bold text-slate-800 mb-1">Hardware Store Catalogue</h1>
+    <p class="text-slate-500 mb-5">Browse our products, view prices and availability.</p>
+
+    <form method="get" th:action="@{/catalogue}" class="flex gap-2 mb-4 max-w-xl">
+        <input type="text" name="q" th:value="${q}" placeholder="Search by name, brand, category or SKU..."
+               class="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500">
+        <button class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-5 py-2 rounded-lg">Search</button>
+    </form>
+
+    <div class="flex gap-2 mb-6 flex-wrap">
+        <a th:href="@{/catalogue}" th:classappend="${category == null} ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 hover:bg-slate-200'"
+           class="px-3 py-1.5 rounded-full text-sm border border-slate-200">All</a>
+        <a th:each="c : ${categories}" th:href="@{/catalogue(category=${c})}" th:text="${c}"
+           th:classappend="${category == c} ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 hover:bg-slate-200'"
+           class="px-3 py-1.5 rounded-full text-sm border border-slate-200">Category</a>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+        <div th:each="p : ${products}" class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200 flex flex-col">
+            <!-- Photo / placeholder -->
+            <div class="h-40 bg-slate-100 flex items-center justify-center">
+                <img th:if="${p.photoPath != null}" th:src="@{/uploads/{name}(name=${p.photoPath})}" alt="product" class="h-full w-full object-contain">
+                <span th:unless="${p.photoPath != null}" class="text-slate-300 text-5xl">&#128717;</span>
+            </div>
+            <div class="p-4 flex-1 flex flex-col">
+                <div class="flex justify-between items-start gap-2">
+                    <h3 class="font-semibold text-slate-800" th:text="${p.name}">Product</h3>
+                    <span th:text="${p.brand}" class="text-xs text-slate-400">Brand</span>
+                </div>
+                <p class="text-xs text-slate-500 mb-2" th:text="${p.category}">Category</p>
+                <div class="mt-auto">
+                    <div class="text-lg font-bold text-slate-800 mb-2">LKR <span th:text="${#numbers.formatDecimal(p.price, 1, 2)}">0.00</span></div>
+                    <span th:if="${p.available}" class="inline-block bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded">AVAILABLE</span>
+                    <span th:unless="${p.available}" class="inline-block bg-red-100 text-red-600 text-xs font-semibold px-2 py-1 rounded">OUT OF STOCK</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <p th:if="${#lists.isEmpty(products)}" class="text-slate-500 text-center py-10">No products match your search.</p>
+</main>
+
+<footer class="max-w-7xl mx-auto px-4 py-8 text-center text-xs text-slate-400">
+    Guruge Hardware Store | Need help? <a th:href="@{/request}" class="text-amber-600 hover:underline">Submit a request</a>
+</footer>
+</body>
+</html>
